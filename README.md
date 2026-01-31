@@ -140,7 +140,7 @@ SkillBridge is a full-stack web application that connects learners with expert t
 ---
 
 ## Database Tables
-
+ 
 Design your own schema for the following tables:
 
 - **Users** - Store user information and authentication details
@@ -148,7 +148,7 @@ Design your own schema for the following tables:
 - **Categories** - Subject categories for tutoring
 - **Bookings** - Session bookings between students and tutors
 - **Reviews** - Student reviews for tutors
-
+ 
 > 💡 _Think about what fields each table needs based on the features above._
 
 ---
@@ -182,7 +182,7 @@ Design your own schema for the following tables:
 | GET    | `/api/bookings/:id` | Get booking details |
 
 ### Tutor Management
-
+ 
 | Method | Endpoint                  | Description          |
 | ------ | ------------------------- | -------------------- |
 | PUT    | `/api/tutor/profile`      | Update tutor profile |
@@ -194,7 +194,7 @@ Design your own schema for the following tables:
 | ------ | -------------- | ------------- |
 | POST   | `/api/reviews` | Create review |
 
-### Admin
+### Admin  
 
 | Method | Endpoint               | Description        |
 | ------ | ---------------------- | ------------------ |

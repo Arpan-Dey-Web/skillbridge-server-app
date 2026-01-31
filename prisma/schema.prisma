@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -13,28 +7,91 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  STUDENT
+  TUTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
 model User {
-  id            String    @id
-  email         String    @unique
+  id            Int        @id @default(autoincrement())
+  email         String     @unique
   name          String?
-  posts         Post[]
-  emailVerified Boolean   @default(false)
+  phone         String?
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  role          Role       @default(STUDENT)
+  status        UserStatus @default(ACTIVE)
+  emailVerified Boolean    @default(false)
+
+  tutorProfile TutorProfile?
+
+  bookings Booking[]
+  reviews  Review[]
+  sessions Session[]
+  accounts Account[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("user")
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  authorId  String
-  author    User    @relation(fields: [authorId], references: [id])
+model Category {
+  id     Int            @id @default(autoincrement())
+  name   String         @unique
+  tutors TutorProfile[]
+}
+
+model TutorProfile {
+  id         Int      @id @default(autoincrement())
+  bio        String
+  hourlyRate Float
+  subjects   String[]
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  availability Availability[]
+  bookings     Booking[]
+}
+
+model Availability {
+  id             Int          @id @default(autoincrement())
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  tutorProfileId Int
+  tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
+}
+
+model Booking {
+  id         Int           @id @default(autoincrement())
+  startTime  DateTime
+  endTime    DateTime
+  totalPrice Float?
+  status     BookingStatus @default(CONFIRMED)
+
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
+
+  tutorProfileId Int
+  tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
+
+  review Review?
 }
 
 model Session {
@@ -45,7 +102,7 @@ model Session {
   updatedAt DateTime @updatedAt
   ipAddress String?
   userAgent String?
-  userId    String
+  userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
@@ -53,11 +110,24 @@ model Session {
   @@map("session")
 }
 
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  bookingId Int     @unique
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  studentId Int
+  student   User @relation(fields: [studentId], references: [id])
+}
+
 model Account {
   id                    String    @id
   accountId             String
   providerId            String
-  userId                String
+  userId                Int
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
