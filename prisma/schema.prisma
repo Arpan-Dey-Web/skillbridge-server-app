@@ -7,6 +7,8 @@ datasource db {
   provider = "postgresql"
 }
 
+// --- Enums ---
+
 enum Role {
   STUDENT
   TUTOR
@@ -24,22 +26,28 @@ enum BookingStatus {
   CANCELLED
 }
 
+// --- Better Auth Core Models ---
+
 model User {
-  id            Int        @id @default(autoincrement())
-  email         String     @unique
+  id            String  @id 
+  email         String  @unique
   name          String?
   phone         String?
   image         String?
-  role          Role       @default(STUDENT)
-  status        UserStatus @default(ACTIVE)
-  emailVerified Boolean    @default(false)
+  emailVerified Boolean @default(false)
 
-  tutorProfile TutorProfile?
+  // Custom SkillBridge Fields
+  role   Role       @default(STUDENT)
+  status UserStatus @default(ACTIVE)
 
-  bookings Booking[]
-  reviews  Review[]
+  // Auth Relations
   sessions Session[]
   accounts Account[]
+
+  // Business Relations
+  tutorProfile TutorProfile?
+  bookings     Booking[]
+  reviews      Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -47,87 +55,28 @@ model User {
   @@map("user")
 }
 
-model Category {
-  id     Int            @id @default(autoincrement())
-  name   String         @unique
-  tutors TutorProfile[]
-}
-
-model TutorProfile {
-  id         Int      @id @default(autoincrement())
-  bio        String
-  hourlyRate Float
-  subjects   String[]
-
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
-
-  categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id])
-
-  availability Availability[]
-  bookings     Booking[]
-}
-
-model Availability {
-  id             Int          @id @default(autoincrement())
-  dayOfWeek      Int
-  startTime      String
-  endTime        String
-  tutorProfileId Int
-  tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
-}
-
-model Booking {
-  id         Int           @id @default(autoincrement())
-  startTime  DateTime
-  endTime    DateTime
-  totalPrice Float?
-  status     BookingStatus @default(CONFIRMED)
-
-  studentId Int
-  student   User @relation(fields: [studentId], references: [id])
-
-  tutorProfileId Int
-  tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
-
-  review Review?
-}
-
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  token     String   @unique
   ipAddress String?
   userAgent String?
-  userId    Int
+  userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([userId])
   @@map("session")
 }
 
-model Review {
-  id        Int      @id @default(autoincrement())
-  rating    Int // 1-5
-  comment   String?
-  createdAt DateTime @default(now())
-
-  bookingId Int     @unique
-  booking   Booking @relation(fields: [bookingId], references: [id])
-
-  studentId Int
-  student   User @relation(fields: [studentId], references: [id])
-}
 
 model Account {
   id                    String    @id
   accountId             String
   providerId            String
-  userId                Int
+  userId                String
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
@@ -136,8 +85,9 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@map("account")
@@ -148,9 +98,88 @@ model Verification {
   identifier String
   value      String
   expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([identifier])
   @@map("verification")
+}
+
+// --- SkillBridge Business Logic Models ---
+
+model Category {
+  id     String         @id @default(uuid())
+  name   String         @unique
+  tutors TutorProfile[]
+
+  @@map("categories")
+}
+
+model TutorProfile {
+  id            String @id @default(uuid())
+  bio           String @db.Text
+  hourlyRate    Float
+  averageRating Float  @default(0.0)
+
+  // Relation to User (String ID)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Relation to Category (String ID)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  // Business Relations 
+  availability Availability[]
+  bookings     Booking[]
+
+  @@map("tutor_profiles")
+}
+
+model Availability {
+  id        String @id @default(uuid())
+  dayOfWeek Int // 0-6
+  startTime String // HH:mm
+  endTime   String // HH:mm
+
+  tutorProfileId String
+  tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
+
+  @@map("availability")
+}
+
+model Booking {
+  id         String        @id @default(uuid())
+  startTime  DateTime
+  endTime    DateTime
+  totalPrice Float?
+  status     BookingStatus @default(CONFIRMED)
+
+  // Student link (User String ID)
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  // Tutor link (Profile String ID)
+  tutorProfileId String
+  tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
+
+  review Review?
+
+  @@map("bookings")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id])
+
+  studentId String
+  student   User   @relation(fields: [studentId], references: [id])
+
+  @@map("reviews")
 }
