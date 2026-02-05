@@ -1,19 +1,31 @@
 import { Router } from 'express';
 import { tutorController } from './tutor.controller';
 
-
-
 const router = Router();
-// get all categorie
-// router.get("/", )
-
-// POST /api/categories
-// router.post('/', );
 
 
 
 
-// patch route
-router.patch("/setup", tutorController.setupTutorProfile)
+// --- Profile Management-- -
+// Matches documentation: PUT /api/tutor/profile
+router.put('/profile', tutorController.setupTutorProfile);
 
-export const tutorRoutes = router;
+
+// --- Availability Management ---
+// Matches documentation: PUT /api/tutor/availability
+router.put('/availability', tutorController.updateAvailability);
+
+
+// Get specific tutor availability
+router.get('/availability/:userId', tutorController.getTutorAvailability);
+
+// --- Analytics/Dashboard ---
+router.get('/stats/:userId', tutorController.getTutorStats);
+
+// public routes for public routes
+// router.get("/tutors",)
+
+
+
+
+export const TutorRoutes = router;
