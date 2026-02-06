@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { reviewController } from "./review.controller";
+import { authorize } from "../../middleware/authorize";
 
 
 
 const router = Router();
 
-router.post("/", reviewController.createReview)
+router.post("/", authorize("STUDENT"), reviewController.createReview)
 
 
 // | Method | Endpoint | Description |

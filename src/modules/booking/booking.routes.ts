@@ -11,13 +11,14 @@
 
 import { Router } from 'express';
 import { bookingController } from './booking.controller';
+import { authorize } from '../../middleware/authorize';
 
 const router = Router();
 
 // Matches: POST /api/bookings
-router.post('/', bookingController.createBooking);
+router.post('/', authorize("STUDENT"), bookingController.createBooking);
 
 // Matches: GET /api/bookings
-router.get('/', bookingController.getMyBookings);
+router.get('/', authorize("STUDENT"), bookingController.getMyBookings);
 
 export const BookingRoutes = router;

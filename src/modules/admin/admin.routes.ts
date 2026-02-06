@@ -1,18 +1,19 @@
 import { Router } from "express";
 import { adminController } from "./admin.controller";
+import { authorize } from "../../middleware/authorize";
 
 const router = Router();
 
 
 
 // GET /api/admin 
-router.get("/", adminController.getDashboardStats);
+router.get("/", authorize("ADMIN") ,adminController.getDashboardStats);
 
 // GET /api/admin/users - Get all users
-router.get("/users", adminController.getAllUsers);
+router.get("/users", authorize("ADMIN"), adminController.getAllUsers);
 
 // PATCH /api/admin/users/:id - Update status (Ban/Unban)
-router.patch("/users/:id", adminController.toggleUserStatus);
+router.patch("/users/:id", authorize("ADMIN"), adminController.toggleUserStatus);
 
 
 
