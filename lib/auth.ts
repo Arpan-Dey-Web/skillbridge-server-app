@@ -27,25 +27,6 @@ export const auth = betterAuth({
             }
         }
     },
-    // databaseHooks: {
-    //     user: {
-    //         create: {
-    //             after: async (user) => {
-    //                 if (user.role === "TUTOR") {
-    //                     await prisma.tutorProfile.create({
-    //                         data: {
-    //                             userId: user.id,
-    //                             bio: "Welcome to my tutor profile! Please update your bio.",
-    //                             hourlyRate: 0,
-    //                             subjects: [],                             
-    //                             categoryId: 1,
-    //                         },
-    //                     });
-    //                 }
-    //             },
-    //         },
-    //     },
-    // },
     emailAndPassword: {
         enabled: true,
     },
