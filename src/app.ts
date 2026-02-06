@@ -6,6 +6,8 @@ import { CategoryRoutes } from "./modules/categorie/categorie.routes";
 import { TutorRoutes } from "./modules/tutor/tutor.routes";
 import { ReviewRouter } from "./modules/review/review.routes";
 import { BookingRoutes } from "./modules/booking/booking.routes";
+import { tutorsRoutes } from "./modules/tutors/tutors.routes";
+import { AdminRoutes } from "./modules/admin/admin.routes";
 
 
 const app: Application = express()
@@ -26,14 +28,19 @@ app.all('/api/auth/*splat', toNodeHandler(auth));
 app.use("/api/categories", CategoryRoutes);
 
 // update tutor data
-app.use("/api/tutors", TutorRoutes);
+app.use("/api/tutor", TutorRoutes);
 
+// public routes
+app.use("/api/tutors", tutorsRoutes);
 
 // tutor review
 app.use("/api/reviews", ReviewRouter)
 
 // booking routes
 app.use("/api/bookings", BookingRoutes);
+
+// admin routes
+app.use("/api/admin", AdminRoutes);
 
 app.get("/", (req: Request, res: Response) => {
     res.send(`SkillBridge App Running on PORT: ${port}`)

@@ -14,7 +14,6 @@ const createReview = async (req: Request, res: Response) => {
 
         const review = await reviewService.createReview({
             studentId,
-            tutorId,
             rating,
             comment,
             bookingId
