@@ -39,19 +39,110 @@ const createBooking = async (data: {
 };
 
 const getUserBookings = async (userId: string, role: string) => {
-    if (role === 'TUTOR') {
-        return await prisma.booking.findMany({
-            where: { tutor: { userId: userId } },
-            include: { student: true }
-        });
-    }
-    return await prisma.booking.findMany({
-        where: { studentId: userId },
-        include: { tutor: { include: { user: true } } }
+    const isTutor = role === 'TUTOR';
+
+    const bookings = await prisma.booking.findMany({
+        where: isTutor ? { tutor: { userId: userId } } : { studentId: userId },
+        include: {
+            student: {
+                select: { name: true, image: true, email: true }
+            },
+            tutor: {
+                include: {
+                    user: {
+                        select: { name: true, image: true, email: true }
+                    }
+                }
+            }
+        },
+        orderBy: { startTime: 'desc' }
+    });
+
+    // Transform data to be "User Friendly"
+    return bookings.map((booking) => {
+        // Determine who the "Other Person" in the booking is
+        const partner = isTutor ? booking.student : booking.tutor.user;
+
+        return {
+            id: booking.id,
+            status: booking.status,
+            totalPrice: booking.totalPrice,
+            // Format dates for easier frontend consumption
+            date: booking.startTime.toISOString().split('T')[0],
+            timeSlot: `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`,
+            // Partner info (The person the user is meeting with)
+            partnerName: partner?.name || "Unknown User",
+            partnerImage: partner?.image,
+            partnerEmail: partner?.email,
+            // Original raw dates just in case
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+        };
     });
 };
 
+
+const getAllBookings = async (userId: string, role: string) => {
+    const isTutor = role === 'TUTOR';
+    const isAdmin = role === 'ADMIN';
+    const whereClause = isAdmin
+        ? {}
+        : isTutor
+            ? { tutor: { userId: userId } }
+            : { studentId: userId };
+
+    const bookings = await prisma.booking.findMany({
+        where: whereClause,
+        include: {
+            student: {
+                select: { id: true, name: true, image: true, email: true }
+            },
+            tutor: {
+                include: {
+                    user: {
+                        select: { name: true, image: true, email: true }
+                    }
+                }
+            }
+        },
+        orderBy: { startTime: 'desc' }
+    });
+
+    return bookings.map((booking) => {
+        // For Admin view, it's better to return both parties clearly
+        return {
+            id: booking.id,
+            status: booking.status,
+            totalPrice: booking.totalPrice,
+            date: booking.startTime.toISOString().split('T')[0],
+            timeSlot: `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`,
+
+            // Helpful for Admin Dashboard tables
+            studentName: booking.student?.name,
+            tutorName: booking.tutor?.user?.name,
+
+            // Standard "Partner" logic for standard users
+            partnerName: isAdmin ? `S: ${booking.student?.name} | T: ${booking.tutor?.user?.name}` :
+                isTutor ? booking.student?.name : booking.tutor?.user?.name,
+
+            startTime: booking.startTime,
+            endTime: booking.endTime,
+        };
+    });
+};
+
+
+const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+    });
+};
+
+
 export const bookingService = {
     createBooking,
-    getUserBookings
+    getUserBookings,
+    getAllBookings
 };

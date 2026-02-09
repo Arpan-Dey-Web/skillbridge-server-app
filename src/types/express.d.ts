@@ -6,7 +6,10 @@ declare global {
         interface User {
             id: string;
             role: Role;
-            email?: string;
+            email: string;
+            name?: string;
+            image?: string | null;
+            emailVerified: boolean;
         }
 
         interface Request {

@@ -106,7 +106,6 @@ model Verification {
   @@map("verification")
 }
 
-// --- SkillBridge Business Logic Models ---
 
 model Category {
   id     String         @id @default(uuid())
@@ -140,8 +139,8 @@ model TutorProfile {
 model Availability {
   id        String @id @default(uuid())
   dayOfWeek Int // 0-6
-  startTime String // HH:mm
-  endTime   String // HH:mm
+  startTime String 
+  endTime   String 
 
   tutorProfileId String
   tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])

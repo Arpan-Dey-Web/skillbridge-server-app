@@ -22,13 +22,18 @@ const upsertTutorProfile = async (payload: any) => {
     });
 };
 
+
+
 const updateAvailability = async (userId: string, schedule: any[]) => {
-    // We delete old availability and set new to keep it clean
     return await prisma.$transaction(async (tx) => {
         const profile = await tx.tutorProfile.findUnique({ where: { userId } });
-        if (!profile) throw new Error("Tutor profile not found");
+        if (!profile) throw new Error("Tutor profile not found. Please set up your profile first.");
 
+        // Wipe existing slots for this tutor
         await tx.availability.deleteMany({ where: { tutorProfileId: profile.id } });
+
+        // If no slots are provided (tutor disabled everything), just return
+        if (schedule.length === 0) return [];
 
         return await tx.availability.createMany({
             data: schedule.map(s => ({
@@ -40,7 +45,6 @@ const updateAvailability = async (userId: string, schedule: any[]) => {
         });
     });
 };
-
 
 const getTutorAvailability = async (userId: string) => {
     const profileWithAvailability = await prisma.tutorProfile.findUnique({

@@ -10,16 +10,20 @@ const setupTutorProfile = async (req: Request, res: Response) => {
     }
 };
 
+
+// tutor.controller.ts
 const updateAvailability = async (req: Request, res: Response) => {
     try {
-        const { userId, schedule } = req.body;
+        // req.user is populated by your 'authorize' middleware
+        const userId = (req as any).user.id;
+        const { schedule } = req.body;
+
         const result = await tutorService.updateAvailability(userId, schedule);
         res.status(200).json({ success: true, message: "Availability updated", data: result });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 
 const getTutorAvailability = async (req: Request, res: Response) => {
     try {

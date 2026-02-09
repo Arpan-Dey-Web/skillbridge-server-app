@@ -5,7 +5,7 @@ import { authorize } from '../../middleware/authorize';
 
 const router = Router();
 // get all categorie
-router.get("/", authorize("TUTOR"), categorieController.getAllCategories)
+router.get("/",  categorieController.getAllCategories)
 
 // POST /api/categories
 router.post('/', authorize("ADMIN"), categorieController.createCategory);
