@@ -20,16 +20,17 @@ enum UserStatus {
   BANNED
 }
 
+
 enum BookingStatus {
-  CONFIRMED
+  PENDING    // স্টুডেন্ট রিকোয়েস্ট পাঠালে ডিফল্ট এটি হবে
+  CONFIRMED  // টিউটর মিট লিংক দিয়ে কনফার্ম করলে
   COMPLETED
   CANCELLED
 }
-
 // --- Better Auth Core Models ---
 
 model User {
-  id            String  @id 
+  id            String  @id
   email         String  @unique
   name          String?
   phone         String?
@@ -71,7 +72,6 @@ model Session {
   @@map("session")
 }
 
-
 model Account {
   id                    String    @id
   accountId             String
@@ -106,7 +106,6 @@ model Verification {
   @@map("verification")
 }
 
-
 model Category {
   id     String         @id @default(uuid())
   name   String         @unique
@@ -121,26 +120,23 @@ model TutorProfile {
   hourlyRate    Float
   averageRating Float  @default(0.0)
 
-  // Relation to User (String ID)
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  userId        String @unique
+  user          User   @relation(fields: [userId], references: [id])
 
-  // Relation to Category (String ID)
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  category      Category @relation(fields: [categoryId], references: [id])
 
-  // Business Relations 
-  availability Availability[]
-  bookings     Booking[]
+  availability  Availability[]
+  bookings      Booking[]
 
   @@map("tutor_profiles")
 }
 
 model Availability {
   id        String @id @default(uuid())
-  dayOfWeek Int // 0-6
-  startTime String 
-  endTime   String 
+  dayOfWeek Int // 0-6 (0=Sunday)
+  startTime String // যেমন: "16:00"
+  endTime   String // যেমন: "18:00"
 
   tutorProfileId String
   tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
@@ -149,21 +145,23 @@ model Availability {
 }
 
 model Booking {
-  id         String        @id @default(uuid())
-  startTime  DateTime
-  endTime    DateTime
-  totalPrice Float?
-  status     BookingStatus @default(CONFIRMED)
+  id              String        @id @default(uuid())
+  startTime       DateTime      // সেশনের শুরুর সময় (বাংলাদেশ সময় অনুযায়ী)
+  endTime         DateTime      // শুরুর সময় + ডিউরেশন (৫, ১০, ১৫, ৩০ মি:)
+  duration        Int?           // কত মিনিটের সেশন (Student's choice)
+  totalPrice      Float?
+  status          BookingStatus @default(PENDING) 
+  meetLink        String?       // টিউটর কনফার্ম করার সময় ম্যানুয়ালি দেবেন
 
-  // Student link (User String ID)
-  studentId String
-  student   User   @relation(fields: [studentId], references: [id])
+  studentId       String
+  student         User          @relation(fields: [studentId], references: [id])
 
-  // Tutor link (Profile String ID)
-  tutorProfileId String
-  tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
+  tutorProfileId  String
+  tutor           TutorProfile  @relation(fields: [tutorProfileId], references: [id])
 
-  review Review?
+  review          Review?
+
+  createdAt       DateTime      @default(now())
 
   @@map("bookings")
 }

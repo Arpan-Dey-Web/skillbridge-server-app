@@ -11,10 +11,12 @@ router.put('/profile', authorize("TUTOR") ,tutorController.setupTutorProfile);
 router.put('/availability', authorize("TUTOR"), tutorController.updateAvailability);
 
 // Get specific tutor availability
-router.get('/availability/:userId', tutorController.getTutorAvailability);
+router.get('/availability/:tutorId', tutorController.getTutorAvailability);
 
 // --- Analytics/Dashboard ---
 router.get('/stats/:userId', tutorController.getTutorStats);
 
+// --- get tutor profile details ---
+router.get('/profile/:userId', authorize("TUTOR"), tutorController.getTutorProfile);
 
 export const TutorRoutes = router;

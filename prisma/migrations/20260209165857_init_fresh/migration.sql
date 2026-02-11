@@ -5,7 +5,7 @@ CREATE TYPE "Role" AS ENUM ('STUDENT', 'TUTOR', 'ADMIN');
 CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'BANNED');
 
 -- CreateEnum
-CREATE TYPE "BookingStatus" AS ENUM ('CONFIRMED', 'COMPLETED', 'CANCELLED');
+CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED');
 
 -- CreateTable
 CREATE TABLE "user" (
@@ -104,10 +104,13 @@ CREATE TABLE "bookings" (
     "id" TEXT NOT NULL,
     "startTime" TIMESTAMP(3) NOT NULL,
     "endTime" TIMESTAMP(3) NOT NULL,
+    "duration" INTEGER,
     "totalPrice" DOUBLE PRECISION,
-    "status" "BookingStatus" NOT NULL DEFAULT 'CONFIRMED',
+    "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
+    "meetLink" TEXT,
     "studentId" TEXT NOT NULL,
     "tutorProfileId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "bookings_pkey" PRIMARY KEY ("id")
 );

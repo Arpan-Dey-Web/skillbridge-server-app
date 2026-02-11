@@ -85,9 +85,33 @@ const getTutorById = async (id: string) => {
     });
 };
 
-
+const getFeaturedTutors = async () => {
+    return await prisma.tutorProfile.findMany({
+        where: {
+            user: { status: 'ACTIVE' }
+        },
+        take: 6,
+        include: {
+            user: {
+                select: {
+                    name: true,
+                    image: true,
+                    createdAt: true // Optional: if you need to show "Joined on..."
+                }
+            },
+            category: true
+        },
+        orderBy: {
+            // Access the createdAt field inside the user relation
+            user: {
+                createdAt: 'desc'
+            }
+        }
+    });
+};
 
 export const tutorsService = {
     getAllTutors,
-    getTutorById
+    getTutorById,
+    getFeaturedTutors
 }

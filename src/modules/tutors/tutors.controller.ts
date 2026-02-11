@@ -39,7 +39,24 @@ const getTutors = async (req: Request, res: Response) => {
     }
 };
 
+const getFirstSixTutors = async (req: Request, res: Response) => {
+    try {
+        // No filters needed here as per your requirement
+        const tutors = await tutorsService.getFeaturedTutors();
 
+        res.status(200).json({
+            success: true,
+            message: "First 6 tutors fetched successfully",
+            count: tutors.length,
+            data: tutors
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: error.message || "Failed to fetch tutors"
+        });
+    }
+};
 
 // Handle GET /api/tutors/:id (Public Profile)
 const getTutorById = async (req: Request, res: Response) => {
@@ -69,5 +86,6 @@ const getTutorById = async (req: Request, res: Response) => {
 
 export const tutorsController = {
     getTutors,
-    getTutorById
+    getTutorById,
+    getFirstSixTutors
 };

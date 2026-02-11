@@ -9,10 +9,9 @@ import { BookingRoutes } from "./modules/booking/booking.routes";
 import { tutorsRoutes } from "./modules/tutors/tutors.routes";
 import { AdminRoutes } from "./modules/admin/admin.routes";
 import { UserRoutes } from "./modules/users/users.routes";
-
-
 const app: Application = express()
 const port = process.env.PORT || 8000;
+
 
 app.use(cors({
     origin: process.env.APP_URL || "http://localhost:3000",
@@ -20,7 +19,6 @@ app.use(cors({
 }))
 
 app.use(express.json())
-
 
 // register user route 
 app.all('/api/auth/*splat', toNodeHandler(auth));

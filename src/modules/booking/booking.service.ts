@@ -19,6 +19,11 @@ const createBooking = async (data: {
     // 2. Calculate duration in hours
     const start = new Date(data.startTime);
     const end = new Date(data.endTime);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new Error("Invalid date format provided");
+    }
+
     const durationInHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
 
     if (durationInHours <= 0) throw new Error("End time must be after start time");
@@ -31,12 +36,41 @@ const createBooking = async (data: {
             startTime: start,
             endTime: end,
             totalPrice,
-            status: BookingStatus.CONFIRMED,
+            status: BookingStatus.PENDING,
             student: { connect: { id: data.studentId } },
             tutor: { connect: { id: data.tutorProfileId } }
         }
     });
 };
+
+const getPendingTutorBookings = async (userId: string) => {
+    return await prisma.booking.findMany({
+        where: {
+            // Check the status
+            status: "PENDING",
+            // Reach through the TutorProfile to the User table
+            tutor: {
+                userId: userId
+            }
+        },
+        include: {
+            student: {
+                select: {
+                    name: true,
+                    image: true,
+                    email: true
+                }
+            },
+            // Including tutor info helps debug if the mapping is correct
+            tutor: true
+        },
+        orderBy: {
+            startTime: 'asc'
+        }
+    });
+};
+
+
 
 const getUserBookings = async (userId: string, role: string) => {
     const isTutor = role === 'TUTOR';
@@ -132,6 +166,35 @@ const getAllBookings = async (userId: string, role: string) => {
 };
 
 
+
+const approveBooking = async (bookingId: string, meetLink: string, tutorUserId: string) => {
+    // ১. চেক করুন এই বুকিংটি আসলেই এই টিউটরের কি না (Security Check)
+    const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { tutor: true }
+    });
+
+    if (!booking) {
+        throw new Error("Booking not found");
+    }
+
+    // ২. নিশ্চিত করুন যে টিউটর নিজেই এটি অ্যাপ্রুভ করছেন
+    if (booking.tutor.userId !== tutorUserId) {
+        throw new Error("You are not authorized to approve this booking");
+    }
+
+    // ৩. আপডেট অপারেশন
+    return await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+            status: "CONFIRMED",
+            meetLink: meetLink,
+        },
+    });
+};
+
+
+
 const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -144,5 +207,7 @@ const formatTime = (date: Date) => {
 export const bookingService = {
     createBooking,
     getUserBookings,
-    getAllBookings
+    getAllBookings,
+    approveBooking,
+    getPendingTutorBookings
 };

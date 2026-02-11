@@ -10,7 +10,13 @@ router.post('/', authorize("STUDENT"), bookingController.createBooking);
 // Matches: GET /api/bookings
 router.get('/', authorize("STUDENT", "TUTOR", "ADMIN"), bookingController.getMyBookings);
 
+// Matches: GET /api/bookings/pending
+router.get('/pending', authorize("TUTOR"), bookingController.getPendingRequests);
+
 // GET All bookings
 router.get('/all', authorize("ADMIN"), bookingController.getAllBookings);
+
+// /api/bookings / approve /: id
+router.patch("/approve/:id", authorize("TUTOR"), bookingController.approveBooking);
 
 export const BookingRoutes = router;
