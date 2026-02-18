@@ -73,6 +73,6 @@ app.use("/api/admin", AdminRoutes);
 app.use("/api/users", UserRoutes);
 
 app.get("/", (req: Request, res: Response) => {
-    res.send(`Learnhub App Running on PORT: ${port}`)
+    res.send(`Learnhub App Running`)
 })
 export default app

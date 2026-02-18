@@ -19,7 +19,6 @@ router.get('/all', authorize("ADMIN"), bookingController.getAllBookings);
 // /api/bookings / approve /: id
 router.patch("/approve/:id", authorize("TUTOR"), bookingController.approveBooking);
 
-
 // /api/bookings/:id
 router.delete("/:id", authorize("TUTOR"), bookingController.deleteBooking);
 

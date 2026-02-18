@@ -10,8 +10,9 @@ router.put('/profile', authorize("TUTOR") ,tutorController.setupTutorProfile);
 // --- Availability Management ---
 router.put('/availability', authorize("TUTOR"), tutorController.updateAvailability);
 
+
 // Get specific tutor availability
-router.get('/availability/:tutorId', tutorController.getTutorAvailability);
+router.get('/availability/:tutorId', authorize("TUTOR"), tutorController.getTutorAvailability);
 
 // --- Analytics/Dashboard ---
 router.get('/stats/:userId', tutorController.getTutorStats);

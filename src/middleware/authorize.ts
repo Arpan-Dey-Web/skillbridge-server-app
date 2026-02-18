@@ -51,12 +51,9 @@ export const authorize = (...allowedRoles: Role[]): RequestHandler => {
                     }
                 }
             }
-
             const session = await auth.api.getSession({
                 headers: headers,
             });
-
-
             if (!session?.user) {
                 console.log("No session found for headers:", req.headers.authorization);
                 return res.status(401).json({ message: "Unauthorized" });
