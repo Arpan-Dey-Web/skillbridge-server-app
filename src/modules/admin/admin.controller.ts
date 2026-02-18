@@ -90,7 +90,6 @@ const getDashboardSummary = async (req: Request, res: Response) => {
     }
 };
 
-
 export const adminController = {
     getAllUsers,
     getuser,

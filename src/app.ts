@@ -72,7 +72,11 @@ app.use("/api/admin", AdminRoutes);
 // admin routes  GET all users
 app.use("/api/users", UserRoutes);
 
+
+
 app.get("/", (req: Request, res: Response) => {
     res.send(`Learnhub App Running`)
 })
+
+
 export default app
