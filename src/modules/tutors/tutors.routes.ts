@@ -4,8 +4,6 @@ import { tutorsController } from "./tutors.controller";
 
 const router = Router();
 
-// Public Routes 
-
 // GET first 6 tutors only  /api/tutors
 router.get('/', tutorsController.getTutors);      
 

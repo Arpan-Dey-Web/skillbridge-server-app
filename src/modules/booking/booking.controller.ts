@@ -58,6 +58,7 @@ const getAllBookings = async (req: Request, res: Response) => {
 
 
 const approveBooking = async (req: Request, res: Response) => {
+    console.log("object");
     try {
         const { id } = req.params;
         const { meetLink } = req.body;
@@ -90,11 +91,32 @@ const approveBooking = async (req: Request, res: Response) => {
     }
 };
 
+const deleteBooking = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params; // /api/bookings/:id
+        const tutorUserId = (req as any).user?.id; // From your auth middleware
+
+        const result = await bookingService.deleteBooking(id as string, tutorUserId);
+
+        res.status(200).json({
+            success: true,
+            message: "Booking request rejected and removed",
+            data: result
+        });
+    } catch (error: any) {
+        const statusCode = error.message.includes("authorized") ? 403 : 400;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message || "Failed to delete booking"
+        });
+    }
+};
 
 export const bookingController = {
     createBooking,
     getMyBookings,
     getAllBookings,
     approveBooking,
-    getPendingRequests
+    getPendingRequests,
+    deleteBooking
 };

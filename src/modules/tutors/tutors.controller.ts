@@ -1,41 +1,42 @@
 import { Request, Response } from "express";
 import { tutorsService } from "./tutors.service";
 
-
+interface tutorData {
+    category?: string,
+    search?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    page?: number,
+    limit?: number,
+    sortBy?: string,
+}
 
 // Handle GET /api/tutors (Public Search)
 const getTutors = async (req: Request, res: Response) => {
     try {
-        const { category, search, minPrice, maxPrice } = req.query;
+        const { category, search, minPrice, maxPrice, page, limit, sortBy } = req.query;
 
-        // 1. Create a dynamic filters object
-        // We define the type to match exactly what your service expects
-        const filters: {
-            category?: string;
-            search?: string;
-            minPrice?: number;
-            maxPrice?: number
-        } = {};
+        const filters = {
+            category: category as string,
+            search: search as string,
+            minPrice: minPrice ? Number(minPrice) : undefined,
+            maxPrice: maxPrice ? Number(maxPrice) : undefined,
+            page: page ? Number(page) : 1,
+            limit: limit ? Number(limit) : 10,
+            sortBy: (sortBy as string) || 'averageRating'
+        };
 
-        // 2. Only assign if they exist. 
-        if (category) filters.category = category as string;
-        if (search) filters.search = search as string;
-        if (minPrice) filters.minPrice = Number(minPrice);
-        if (maxPrice) filters.maxPrice = Number(maxPrice);
-
-        // 3. Pass the clean object to the service
-        const tutors = await tutorsService.getAllTutors(filters);
+        const { tutors, totalCount } = await tutorsService.getAllTutors(filters as any)
 
         res.status(200).json({
             success: true,
-            count: tutors.length,
+            totalCount,
+            page: filters.page,
+            totalPages: Math.ceil(totalCount / filters.limit),
             data: tutors
         });
     } catch (error: any) {
-        res.status(500).json({
-            success: false,
-            message: error.message || "Failed to fetch tutors"
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -82,6 +83,9 @@ const getTutorById = async (req: Request, res: Response) => {
         });
     }
 };
+
+
+
 
 
 export const tutorsController = {

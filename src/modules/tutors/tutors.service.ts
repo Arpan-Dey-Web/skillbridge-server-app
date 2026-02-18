@@ -1,23 +1,26 @@
 import { prisma } from "../../../lib/prisma";
 import { Prisma } from "../../../generated/prisma/client";
 
-const getAllTutors = async (filters: {
-    category?: string;
-    search?: string;
-    minPrice?: number;
-    maxPrice?: number;
-}) => {
-    // 1. Initialize an empty where object with the correct Prisma type
+interface tutorData {
+    category?: string,
+    search?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    page?: number,
+    limit?: number,
+    sortBy?: string,
+}
+
+
+const getAllTutors = async (filters: tutorData) => {
+    const { page = 1, limit = 10, sortBy = 'averageRating' } = filters;
+    const skip = (page - 1) * limit;
+
     const where: Prisma.TutorProfileWhereInput = {
-        user: { status: 'ACTIVE' } // Always filter for active users
+        user: { status: 'ACTIVE' }
     };
 
-    // 2. Only add category if it's provided
-    if (filters.category) {
-        where.category = { name: filters.category };
-    }
-
-    // 3. Only add search (OR) if it's provided
+    if (filters.category) where.category = { name: filters.category };
     if (filters.search) {
         where.OR = [
             { bio: { contains: filters.search, mode: 'insensitive' } },
@@ -25,23 +28,26 @@ const getAllTutors = async (filters: {
         ];
     }
 
-    // 4. Handle hourly rate range
     where.hourlyRate = {
         gte: filters.minPrice ?? 0,
         lte: filters.maxPrice ?? 999999
     };
 
-    // 5. Execute query
-    return await prisma.tutorProfile.findMany({
+    // Total count বের করা (Pagination এর জন্য জরুরি)
+    const totalCount = await prisma.tutorProfile.count({ where });
+
+    const tutors = await prisma.tutorProfile.findMany({
         where,
         include: {
-            user: {
-                select: { name: true, image: true }
-            },
+            user: { select: { name: true, image: true } },
             category: true
         },
-        orderBy: { averageRating: 'desc' }
+        orderBy: { [sortBy]: 'desc' }, // dynamic sorting
+        skip,
+        take: limit,
     });
+
+    return { tutors, totalCount };
 };
 
 

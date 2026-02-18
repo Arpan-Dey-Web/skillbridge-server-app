@@ -1,4 +1,4 @@
-# SkillBridge 🎓
+# LearnHub 🎓
 
 **"Connect with Expert Tutors, Learn Anything"**
 
@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-SkillBridge is a full-stack web application that connects learners with expert tutors. Students can browse tutor profiles, view availability, and book sessions instantly. Tutors can manage their profiles, set availability, and track their teaching sessions. Admins oversee the platform and manage users.
+LearnHub is a full-stack web application that connects learners with expert tutors. Students can browse tutor profiles, view availability, and book sessions instantly. Tutors can manage their profiles, set availability, and track their teaching sessions. Admins oversee the platform and manage users.
 
 ---
 

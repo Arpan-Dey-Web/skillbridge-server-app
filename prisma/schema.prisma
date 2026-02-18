@@ -7,7 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// --- Enums ---
 
 enum Role {
   STUDENT
@@ -22,12 +21,12 @@ enum UserStatus {
 
 
 enum BookingStatus {
-  PENDING    // স্টুডেন্ট রিকোয়েস্ট পাঠালে ডিফল্ট এটি হবে
-  CONFIRMED  // টিউটর মিট লিংক দিয়ে কনফার্ম করলে
+  PENDING    
+  CONFIRMED  
   COMPLETED
   CANCELLED
 }
-// --- Better Auth Core Models ---
+
 
 model User {
   id            String  @id
@@ -37,15 +36,15 @@ model User {
   image         String?
   emailVerified Boolean @default(false)
 
-  // Custom SkillBridge Fields
+
   role   Role       @default(STUDENT)
   status UserStatus @default(ACTIVE)
 
-  // Auth Relations
+
   sessions Session[]
   accounts Account[]
 
-  // Business Relations
+
   tutorProfile TutorProfile?
   bookings     Booking[]
   reviews      Review[]
@@ -134,9 +133,9 @@ model TutorProfile {
 
 model Availability {
   id        String @id @default(uuid())
-  dayOfWeek Int // 0-6 (0=Sunday)
-  startTime String // যেমন: "16:00"
-  endTime   String // যেমন: "18:00"
+  dayOfWeek Int 
+  startTime String 
+  endTime   String 
 
   tutorProfileId String
   tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id])
@@ -146,12 +145,13 @@ model Availability {
 
 model Booking {
   id              String        @id @default(uuid())
-  startTime       DateTime      // সেশনের শুরুর সময় (বাংলাদেশ সময় অনুযায়ী)
-  endTime         DateTime      // শুরুর সময় + ডিউরেশন (৫, ১০, ১৫, ৩০ মি:)
-  duration        Int?           // কত মিনিটের সেশন (Student's choice)
+  startTime       DateTime      
+
+  endTime         DateTime      
+  duration        Int?          
   totalPrice      Float?
   status          BookingStatus @default(PENDING) 
-  meetLink        String?       // টিউটর কনফার্ম করার সময় ম্যানুয়ালি দেবেন
+  meetLink        String?       
 
   studentId       String
   student         User          @relation(fields: [studentId], references: [id])

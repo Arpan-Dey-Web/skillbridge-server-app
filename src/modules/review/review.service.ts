@@ -1,6 +1,5 @@
 import { prisma } from "../../../lib/prisma";
 
-
 interface reviewType {
     studentId: string;
     rating: number;
@@ -9,30 +8,41 @@ interface reviewType {
 }
 
 
-// review.service.ts
 const createReview = async (data: reviewType) => {
     return await prisma.$transaction(async (tx) => {
-        // 1. Create the review
+        // 1. CHECK: Does a review already exist for this booking?
+        const existingReview = await tx.review.findUnique({
+            where: { bookingId: data.bookingId }
+        });
+
+        if (existingReview) {
+            throw new Error("You have already submitted a review for this session.");
+        }
+
+        // 2. CREATE: Use direct IDs for the mapping
         const review = await tx.review.create({
             data: {
                 rating: data.rating,
                 comment: data.comment,
-                student: { connect: { id: data.studentId } },
-                booking: { connect: { id: data.bookingId } }
+                bookingId: data.bookingId, // Ensure this field exists in your Schema
+                studentId: data.studentId,
             },
-            include: {
-                booking: true // We need this to find the tutorProfileId
-            }
+            include: { booking: true }
         });
 
-        // 2. Recalculate the Tutor's average rating
+        // 3. UPDATE: Booking Status
+        await tx.booking.update({
+            where: { id: data.bookingId },
+            data: { status: "COMPLETED" }
+        });
+
+        // 4. RECALCULATE: Tutor average
         const tutorId = review.booking.tutorProfileId;
         const aggregations = await tx.review.aggregate({
             _avg: { rating: true },
             where: { booking: { tutorProfileId: tutorId } }
         });
 
-        // 3. Update the TutorProfile
         await tx.tutorProfile.update({
             where: { id: tutorId },
             data: { averageRating: aggregations._avg.rating || 0 }
@@ -43,7 +53,37 @@ const createReview = async (data: reviewType) => {
 };
 
 
+const getTutorReviews = async (userId: string) => {
+    return await prisma.review.findMany({
+        where: {
+            booking: {
+                tutor: {
+                   
+                    userId: userId
+                }
+            }
+        },
+        include: {
+            student: {
+                select: {
+                    name: true,
+                    image: true,
+                }
+            },
+            booking: {
+                select: {
+                    startTime: true,
+                    status: true
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
+};
 
 export const reviewService = {
-    createReview
+    createReview,
+    getTutorReviews
 }

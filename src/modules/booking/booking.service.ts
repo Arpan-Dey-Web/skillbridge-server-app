@@ -70,8 +70,6 @@ const getPendingTutorBookings = async (userId: string) => {
     });
 };
 
-
-
 const getUserBookings = async (userId: string, role: string) => {
     const isTutor = role === 'TUTOR';
 
@@ -92,7 +90,15 @@ const getUserBookings = async (userId: string, role: string) => {
         orderBy: { startTime: 'desc' }
     });
 
-    // Transform data to be "User Friendly"
+    // Helper function for time formatting (ensure this is defined in your utils)
+    const formatTime = (date: Date) => {
+        return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+
     return bookings.map((booking) => {
         // Determine who the "Other Person" in the booking is
         const partner = isTutor ? booking.student : booking.tutor.user;
@@ -104,17 +110,20 @@ const getUserBookings = async (userId: string, role: string) => {
             // Format dates for easier frontend consumption
             date: booking.startTime.toISOString().split('T')[0],
             timeSlot: `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`,
-            // Partner info (The person the user is meeting with)
+
+            // --- ADDED FIELD ---
+            meetLink: booking.meetLink,
+
+            // Partner info
             partnerName: partner?.name || "Unknown User",
             partnerImage: partner?.image,
             partnerEmail: partner?.email,
-            // Original raw dates just in case
+            // Original raw dates
             startTime: booking.startTime,
             endTime: booking.endTime,
         };
     });
 };
-
 
 const getAllBookings = async (userId: string, role: string) => {
     const isTutor = role === 'TUTOR';
@@ -165,8 +174,6 @@ const getAllBookings = async (userId: string, role: string) => {
     });
 };
 
-
-
 const approveBooking = async (bookingId: string, meetLink: string, tutorUserId: string) => {
     // ১. চেক করুন এই বুকিংটি আসলেই এই টিউটরের কি না (Security Check)
     const booking = await prisma.booking.findUnique({
@@ -193,8 +200,6 @@ const approveBooking = async (bookingId: string, meetLink: string, tutorUserId: 
     });
 };
 
-
-
 const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -203,11 +208,33 @@ const formatTime = (date: Date) => {
     });
 };
 
+const deleteBooking = async (bookingId: string, tutorUserId: string) => {
+    // 1. Find the booking and check ownership
+    const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { tutor: true }
+    });
+
+    if (!booking) {
+        throw new Error("Booking not found");
+    }
+
+    // 2. Security Check: Is this tutor the owner of this booking?
+    if (booking.tutor.userId !== tutorUserId) {
+        throw new Error("You are not authorized to reject this booking");
+    }
+
+    // 3. Delete the record
+    return await prisma.booking.delete({
+        where: { id: bookingId }
+    });
+};
 
 export const bookingService = {
     createBooking,
     getUserBookings,
     getAllBookings,
     approveBooking,
-    getPendingTutorBookings
+    getPendingTutorBookings,
+    deleteBooking
 };

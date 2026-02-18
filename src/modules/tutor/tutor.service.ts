@@ -31,39 +31,54 @@ const updateAvailability = async (userId: string, scheduleData: any) => {
         { id: "afternoon", start: "04:00 PM", end: "06:00 PM" },
         { id: "night", start: "09:00 PM", end: "11:00 PM" },
     ];
+
     return await prisma.$transaction(async (tx) => {
+        // ১. টিউটর প্রোফাইল খুঁজে বের করা
         const profile = await tx.tutorProfile.findUnique({ where: { userId } });
         if (!profile) throw new Error("Tutor profile not found.");
 
-        // ১. আগের সব স্লট মুছে ফেলা
+        // ২. পুরনো সব স্লট মুছে ফেলা (ক্লিন স্লেট)
         await tx.availability.deleteMany({ where: { tutorProfileId: profile.id } });
 
-        // ২. ফ্রন্টএন্ডের অবজেক্ট { 1: ["morning", "night"], 2: [...] } কে 
-        // ডাটাবেস ফ্রেন্ডলি অ্যারেতে রূপান্তর করা
-        const availabilityData: any[] = [];
+        // ৩. ডুপ্লিকেট এড়ানোর জন্য একটি Map তৈরি করা
+        const uniqueSlots = new Map();
 
         Object.entries(scheduleData).forEach(([day, shifts]: [string, any]) => {
-            shifts.forEach((shiftId: string) => {
-                // SHIFT_CONFIG থেকে সময় খুঁজে বের করা (অথবা হার্ডকোড করা)
-                const config = SHIFT_CONFIG_DATA.find(s => s.id === shiftId);
-                if (config) {
-                    availabilityData.push({
-                        tutorProfileId: profile.id,
-                        dayOfWeek: parseInt(day),
-                        startTime: config.start, // "11:00 AM"
-                        endTime: config.end,     // "01:00 PM"
-                    });
-                }
-            });
+            // ৭ (Sunday) আসলে সেটিকে ০ তে রূপান্তর করা
+            const dayNum = parseInt(day) % 7;
+
+            if (Array.isArray(shifts)) {
+                shifts.forEach((shiftId: string) => {
+                    const config = SHIFT_CONFIG_DATA.find(s => s.id === shiftId);
+
+                    if (config) {
+                        // দিন এবং শুরুর সময় দিয়ে একটি ইউনিক কি (Key) তৈরি
+                        // উদাহরণ: "0-11:00 AM" (Sunday Morning)
+                        const slotKey = `${dayNum}-${config.start}`;
+
+                        if (!uniqueSlots.has(slotKey)) {
+                            uniqueSlots.set(slotKey, {
+                                tutorProfileId: profile.id,
+                                dayOfWeek: dayNum,
+                                startTime: config.start,
+                                endTime: config.end,
+                            });
+                        }
+                    }
+                });
+            }
         });
 
+        // ৪. যদি কোনো শিডিউল সিলেক্ট করা না থাকে
+        const availabilityData = Array.from(uniqueSlots.values());
         if (availabilityData.length === 0) return [];
 
+        // ৫. ডাটাবেসে ইউনিক ডাটাগুলো সেভ করা
         return await tx.availability.createMany({
             data: availabilityData
         });
     });
-};
+}
 
 const getTutorAvailability = async (userId: string) => {
     // ১. প্রথমে প্রোফাইল চেক করুন

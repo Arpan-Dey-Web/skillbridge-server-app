@@ -1,15 +1,14 @@
-
-import { Role } from "../constants/role";
-
 declare global {
     namespace Express {
         interface User {
             id: string;
-            role: Role;
+            role: "ADMIN" | "TUTOR" | "STUDENT";
             email: string;
-            name?: string;
-            image?: string | null;
+            name?: string | undefined;
+            image?: string | null | undefined;
             emailVerified: boolean;
+            createdAt?: Date | undefined;
+            updatedAt?: Date | undefined;
         }
 
         interface Request {
